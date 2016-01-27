@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doc>
+<assembly><name>FSharpRayTracer</name></assembly>
+<members>
+<member name="M:FSharpRayTracer.Worlds.randomLights(System.Int32,System.Double)">
+<summary>
+ Returns an array of random lights near the origin.
+</summary>
+</member>
+<member name="M:FSharpRayTracer.Worlds.randomShapes(System.Int32,System.Double)">
+<summary>
+ Returns an array of random shapes near the origin.
+</summary>
+</member>
+</members>
+</doc>
