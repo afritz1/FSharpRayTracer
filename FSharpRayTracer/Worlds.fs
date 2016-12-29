@@ -68,10 +68,8 @@ module Worlds =
         let worldRadius = 10.0
         let shapes = randomShapes(shapeCount, worldRadius)
         let lights = randomLights(lightCount, worldRadius)
-        let lightSamples = lightSamples
-        let ambientSamples = ambientSamples
 
-        member private this.NearestShape(ray : Ray) =
+        member inline private this.NearestShape(ray : Ray) =
             let mutable nearestShape = Intersection()
             for shape in shapes do
                 let currentTry = shape.Intersect(ray)
@@ -79,7 +77,7 @@ module Worlds =
                     nearestShape <- currentTry
             nearestShape
 
-        member private this.NearestLight(ray : Ray) =
+        member inline private this.NearestLight(ray : Ray) =
             let mutable nearestLight = Intersection()
             for light in lights do
                 let currentTry = light.Intersect(ray)
@@ -87,20 +85,19 @@ module Worlds =
                     nearestLight <- currentTry
             nearestLight
 
-        member private this.NearestHit(ray : Ray) =
+        member inline private this.NearestHit(ray : Ray) =
             let nearestShape = this.NearestShape(ray)
             let nearestLight = this.NearestLight(ray)
             (if (nearestShape.T < nearestLight.T) then nearestShape else nearestLight)
 
-        member private this.BackgroundColor(ray : Ray) =
+        member inline private this.BackgroundColor(ray : Ray) =
             let horizonColor = Vector3(0.60, 0.80, 1.0)
             let zenithColor = horizonColor.ScaledBy(0.70)
             let elevation = ray.Direction.Y
             let percent = if (elevation < 0.0) then 0.0 else elevation
             horizonColor.ScaledBy(1.0 - percent) + zenithColor.ScaledBy(percent)
 
-	/// Gets the percentage of ambient light visible at a point.
-        member private this.GetAmbientPercent(point : Vector3, normal : Vector3) =
+        member inline private this.GetAmbientPercent(point : Vector3, normal : Vector3) =
             let maxOccDist = 1.5
             let maxOccDistRecip = 1.0 / maxOccDist
             let normEps = point + normal.ScaledBy(EPSILON)
@@ -114,8 +111,7 @@ module Worlds =
                 percent <- percent + (if (currentTry.T > maxOccDist) then 1.0 else occPercent)
             percent / float(ambientSamples)
 
-	/// Gets the fully-shaded color of a material at a point.
-        member private this.PhongAt(intersection : Intersection, ray : Ray) =         
+        member inline private this.PhongAt(intersection : Intersection, ray : Ray) =
             let ambientComponent (material : Material, point : Vector3, normal : Vector3) =
                 let ambientColor = material.Diffuse().ScaledBy(this.BackgroundColor(ray))
                 let ambientPercent = this.GetAmbientPercent(point, normal)
@@ -138,7 +134,7 @@ module Worlds =
                             let lnDot = lightDirection.Dot(normal)
                             let lnReflect = lightDirection.Reflected(normal).Normalized()
                             let lnReflectVDot = lnReflect.Dot(view)
-                            let lightColor = lightTry.Material.Diffuse()
+                            let lightColor = lightTry.Material.Value.Diffuse()
                             let shinyAmount = Math.Pow(Math.Max(0.0, lnReflectVDot), material.Shininess())
                             let highlight = lightColor.ScaledBy(material.Specularity() * shinyAmount)
                             let diffuse = material.Diffuse().ScaledBy(lightColor).ScaledBy(Math.Max(0.0, lnDot))
@@ -159,10 +155,10 @@ module Worlds =
                     let reflectedColor : Vector3 = this.TraceRay(reflectedRay)
                     reflectedColor.ScaledBy(material.Specularity())
 
-            let point = intersection.Point
-            let normal = intersection.Normal
-            let material = intersection.Material
-            let view = ray.Direction.Negated()            
+            let point = intersection.Point.Value
+            let normal = intersection.Normal.Value
+            let material = intersection.Material.Value
+            let view = ray.Direction.Negated()
             let vnDot = view.Dot(normal)
             let vnSign = (if (vnDot > 0.0) then 1.0 else (if (vnDot < 0.0) then -1.0 else 0.0))
             let localNormal = normal.ScaledBy(vnSign)
@@ -171,14 +167,12 @@ module Worlds =
             let reflection = reflectedComponent(material, point, localNormal, view, ray.Depth)
             ambient + diffuse + reflection
         
-	/// Gets the color of a ray after tracing through the world.
         member this.TraceRay (ray : Ray) =
             let nearestHit = this.NearestHit(ray)
             if (nearestHit.T < Intersection.TMax()) then
-                let material = nearestHit.Material
+                let material = nearestHit.Material.Value
                 match material.MaterialType() with
                 | MaterialType.SolidColor -> material.Diffuse()
                 | MaterialType.Phong -> this.PhongAt(nearestHit, ray)
-                | _ -> Vector3.Zero()
             else
                 this.BackgroundColor(ray)

@@ -4,17 +4,10 @@ module Cameras =
     open Vectors
 
     type Camera (eye : Vector3, forward : Vector3, right : Vector3, up : Vector3) =
-        let eye = eye
-        let forward = forward
-        let right = right
-        let up = up
-
         member this.Eye = eye
         member this.Forward = forward
         member this.Right = right
         member this.Up = up
-        
-        new () = Camera(Vector3.Zero(), Vector3.Zero(), Vector3.Zero(), Vector3.Zero())
 
         static member GlobalUp () = Vector3.UnitY()
 

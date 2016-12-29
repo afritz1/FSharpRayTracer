@@ -8,10 +8,7 @@ module Shapes =
     open Rays
     open Vectors
 
-    /// Not actually used. I decided not to create an acceleration structure.
     type BoundingBox (min : Vector3, max : Vector3) =
-        let min = min
-        let max = max
         let extent = max - min
 
         member this.Min = min
@@ -94,11 +91,8 @@ module Shapes =
     type Sphere (point : Vector3, radius : float, material : Material) =
         inherit Shape()
 
-        let point = point
-        let radius = radius
         let radiusSquared = radius * radius
         let radiusRecip = 1.0 / radius
-        let material = material
 
         override this.Centroid () = point
 
@@ -122,7 +116,7 @@ module Shapes =
                     else Intersection.TMax()
                 let point = ray.PointAt(t)
                 let normal = (point - this.Centroid()).ScaledBy(radiusRecip)
-                Intersection(t, point, normal, material)
+                Intersection(t, Some(point), Some(normal), Some(material))
 
     type Cuboid (point : Vector3, width : float, height : float, depth : float, material : Material) = 
         inherit Shape()
@@ -231,4 +225,4 @@ module Shapes =
                 let t = tMin
                 let point = ray.PointAt(t)
                 let normal = Vector3(nMinX, nMinY, nMinZ).Normalized()
-                Intersection(t, point, normal, material)
+                Intersection(t, Some(point), Some(normal), Some(material))

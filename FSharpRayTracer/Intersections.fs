@@ -1,22 +1,18 @@
 ﻿namespace FSharpRayTracer
 
+// Using options for the bulk of the intersection data really helps with performance.
+// It's better than making dummy values all the time.
+
 module Intersections =
     open Materials
     open Vectors
 
-    type Intersection (t : float, point : Vector3, normal : Vector3, material : Material) =
-        let t = t
-        let point = point
-        let normal = normal
-        let material = material
-
+    type Intersection (t : float, point : Vector3 option, normal : Vector3 option, material : Material option) =
         member this.T = t
         member this.Point = point
         member this.Normal = normal
         member this.Material = material
 
-        static member TMax () = System.Double.MaxValue
+        static member inline TMax () = System.Double.MaxValue
 
-        new () = 
-            let zeroVec = Vector3.Zero()
-            Intersection(Intersection.TMax(), zeroVec, zeroVec, EmptyMaterial())
+        new () = Intersection(Intersection.TMax(), None, None, None)

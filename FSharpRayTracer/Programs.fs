@@ -12,13 +12,13 @@ module Programs =
     open Vectors
     open Worlds
 
-    let GenerateRay (camera : Camera, xPercent : float, yPercent : float) =
+    let inline GenerateRay (camera : Camera, xPercent : float, yPercent : float) =
         let topLeft = camera.Forward + camera.Up - camera.Right
         let rightComp = camera.Right.ScaledBy(2.0 * xPercent)
         let upComp = camera.Up.ScaledBy(2.0 * yPercent)
         Ray(camera.Eye, (topLeft + rightComp - upComp).Normalized(), Ray.DefaultDepth())
 
-    let VecToColor (v : Vector3) =
+    let inline VecToColor (v : Vector3) =
         let r = int(v.X * 255.0)
         let g = int(v.Y * 255.0)
         let b = int(v.Z * 255.0)
@@ -42,23 +42,17 @@ module Programs =
         let image = new Bitmap(width, height)
         let result = Parallel.For(0, height, fun y -> 
             for x in 0 .. (width - 1) do
-                let left = float(x) - 0.5
-                let right = left + 1.0
-                let top = float(y) - 0.5
-                let bottom = top + 1.0
-                let radius = ((right + bottom - left - top) * 0.25) * superSamplesRecip
-                let radiusDoubled = radius * 2.0
-                let mutable i = left + radius
                 let mutable color = Vector3.Zero()
-                while (i < right) do
-                    let mutable j = top + radius
-                    while (j < bottom) do
-                        let ray = GenerateRay(camera, i * widthRecip, j * heightRecip)
-                        color <- color + world.TraceRay(ray).Clamped()
-                        j <- j + radiusDoubled
-                    i <- i + radiusDoubled
-                let totalColor = color.ScaledBy(superSamplesSquaredRecip)
-                lock obj (fun () -> image.SetPixel(x, y, VecToColor(totalColor))))
+                for j in 0 .. (superSamples - 1) do
+                    let jj = float(j) * superSamplesRecip
+                    let yy = (float(y) + jj) * heightRecip
+                    for i in 0 .. (superSamples - 1) do
+                        let ii = float(i) * superSamplesRecip
+                        let xx = (float(x) + ii) * widthRecip
+                        let ray = GenerateRay(camera, xx, yy)
+                        color <- color + world.TraceRay(ray)
+                let finalColor = color.ScaledBy(superSamplesSquaredRecip).Clamped()
+                lock obj (fun () -> image.SetPixel(x, y, VecToColor(finalColor))))
         image.Save(filename + ".png", Imaging.ImageFormat.Png)
         image.Dispose()
 
@@ -93,6 +87,5 @@ module Programs =
     stopwatch.Stop()
 
     // Tell that the ray tracer is finished.
-    let totalSeconds = stopwatch.Elapsed.TotalSeconds
-    Console.Write("Done! Took " + totalSeconds.ToString("n2") + "s.");
+    Console.Write("Done! Took " + stopwatch.Elapsed.TotalSeconds.ToString("n2") + "s.");
     ignore(Console.ReadLine())
