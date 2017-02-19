@@ -106,19 +106,19 @@ module Vectors =
         static member RandomColor () = 
             Vector3(Vector3.GetRand(), Vector3.GetRand(), Vector3.GetRand())
 
-        static member RandomPointInSphere (point : Vector3, radius : float) =
+        static member RandomPointInSphere (radius : float) =
             let randX = (2.0 * Vector3.GetRand()) - 1.0
             let randY = (2.0 * Vector3.GetRand()) - 1.0
             let randZ = (2.0 * Vector3.GetRand()) - 1.0
             let randPoint = Vector3(randX, randY, randZ)
-            point + randPoint.Normalized().ScaledBy(radius * Vector3.GetRand())
+            randPoint.Normalized().ScaledBy(radius * Vector3.GetRand())
 
-        static member RandomPointInCuboid (point : Vector3, width : float, height : float, depth : float) =
-            let randX = (2.0 * Vector3.GetRand()) - 1.0
-            let randY = (2.0 * Vector3.GetRand()) - 1.0
-            let randZ = (2.0 * Vector3.GetRand()) - 1.0
+        static member RandomPointInCuboid (width : float, height : float, depth : float) =
+            let randX = Vector3.GetRand() - 0.50
+            let randY = Vector3.GetRand() - 0.50
+            let randZ = Vector3.GetRand() - 0.50
             let randPoint = Vector3(width * randX, height * randY, depth * randZ)
-            point + randPoint
+            randPoint
 
         static member RandomDirectionInHemisphere (normal : Vector3) =
             let randX = (2.0 * Vector3.GetRand()) - 1.0

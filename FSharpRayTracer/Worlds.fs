@@ -14,7 +14,7 @@ module Worlds =
     /// Returns an array of random shapes near the origin.
     let private randomShapes (count : int, worldRadius : float) =
         let random = Random()
-        let makePoint () = Vector3.RandomPointInSphere(Vector3.Zero(), worldRadius)
+        let makePoint () = Vector3.RandomPointInSphere(worldRadius)
         let makeMaterial () = Phong(Vector3.RandomColor())
         let makeDimension () = 0.5 + random.NextDouble()
         let makeSphere () =
@@ -42,7 +42,7 @@ module Worlds =
     /// Returns an array of random lights near the origin.
     let private randomLights (count : int, worldRadius : float) =
         let random = Random()
-        let makePoint () = Vector3.RandomPointInSphere(Vector3.UnitY(), worldRadius)
+        let makePoint () = Vector3.UnitY() + Vector3.RandomPointInSphere(worldRadius)
         let makeDimension () = 0.5 + random.NextDouble()
         let makeSphereLight () =
             let point = makePoint()
