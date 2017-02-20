@@ -8,8 +8,8 @@ module Rays =
         member this.Direction = direction
         member this.Depth = depth
 
-        static member DefaultDepth () = 0
-        static member MaxDepth () = 4
+        static member inline DefaultDepth () = 0
+        static member inline MaxDepth () = 4
 
         member this.PointAt (distance : float) = 
             point + direction.ScaledBy(distance)

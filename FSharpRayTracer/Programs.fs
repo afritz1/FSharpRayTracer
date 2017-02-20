@@ -1,4 +1,4 @@
-﻿namespace FSharpRayTracer
+namespace FSharpRayTracer
 
 module Programs =
     open System
@@ -11,25 +11,13 @@ module Programs =
     open Rays
     open Vectors
     open Worlds
-
-    let inline GenerateRay (camera : Camera, xPercent : float, yPercent : float) =
-        let topLeft = camera.Forward + camera.Up - camera.Right
-        let rightComp = camera.Right.ScaledBy(2.0 * xPercent)
-        let upComp = camera.Up.ScaledBy(2.0 * yPercent)
-        Ray(camera.Eye, (topLeft + rightComp - upComp).Normalized(), Ray.DefaultDepth())
-
-    let inline VecToColor (v : Vector3) =
-        let r = int(v.X * 255.0)
-        let g = int(v.Y * 255.0)
-        let b = int(v.Z * 255.0)
-        Color.FromArgb(r, g, b)
         
     let Run (width : int, height : int, superSamples : int, shapeCount : int, lightCount : int, lightSamples : int, ambientSamples : int, filename : string) =
         let eye = Vector3(6.0, 3.0, 12.0)
         let focus = Vector3(0.0, 0.0, 0.0)
-        let aspect = float(width) / float(height)        
-        let zoom = 1.75
-        let camera = Camera.LookAt(eye, focus, aspect, zoom)
+        let fovY = 60.0
+        let aspect = float(width) / float(height)
+        let camera = Camera.LookAt(eye, focus, fovY, aspect)
 
         let world = World(shapeCount, lightCount, lightSamples, ambientSamples)
 
@@ -49,10 +37,11 @@ module Programs =
                     for i in 0 .. (superSamples - 1) do
                         let ii = float(i) * superSamplesRecip
                         let xx = (float(x) + ii) * widthRecip
-                        let ray = GenerateRay(camera, xx, yy)
+                        let direction = camera.GenerateDirection(xx, yy)
+                        let ray = Ray(camera.Eye, direction, Ray.DefaultDepth())
                         color <- color + world.TraceRay(ray)
                 let finalColor = color.ScaledBy(superSamplesSquaredRecip).Clamped()
-                lock obj (fun () -> image.SetPixel(x, y, VecToColor(finalColor))))
+                lock obj (fun () -> image.SetPixel(x, y, finalColor.ToColor())))
         image.Save(filename + ".png", Imaging.ImageFormat.Png)
         image.Dispose()
 

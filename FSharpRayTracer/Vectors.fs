@@ -5,6 +5,7 @@
 
 module Vectors =
     open System
+    open System.Drawing
     open System.Threading
 
     let EPSILON = 1.0e-6
@@ -39,6 +40,12 @@ module Vectors =
             let y = this.Y
             let z = this.Z
             "[" + x.ToString() + " " + y.ToString() + " " + z.ToString() + "]"
+
+        member inline this.ToColor () =
+            let r = int(this.X * 255.0)
+            let g = int(this.Y * 255.0)
+            let b = int(this.Z * 255.0)
+            Color.FromArgb(r, g, b)
 
         member inline this.Dot (v : Vector3) = 
             (this.X * v.X) + (this.Y * v.Y) + (this.Z * v.Z)

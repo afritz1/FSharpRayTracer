@@ -98,14 +98,26 @@ module Worlds =
             horizonColor.ScaledBy(1.0 - percent) + zenithColor.ScaledBy(percent)
 
         member inline private this.GetAmbientPercent(point : Vector3, normal : Vector3) =
-            let maxOccDist = 1.5
-            let maxOccDistRecip = 1.0 / maxOccDist
             let normEps = point + normal.ScaledBy(EPSILON)
-            let defaultRayDepth = Ray.DefaultDepth()
+            let mutable visibleSamples = 0
+            for n in 1 .. ambientSamples do
+                let hemisphereDir = Vector3.RandomDirectionInHemisphere(normal)
+                let hemisphereRay = Ray(normEps, hemisphereDir, Ray.DefaultDepth())
+                let currentTry = this.NearestHit(hemisphereRay)
+                visibleSamples <- visibleSamples + (if (currentTry.T < Intersection.TMax()) then 0 else 1)
+            float(visibleSamples) / float(ambientSamples)
+
+        // This method is different from "true" ambient occlusion because it offers a variable for 
+        // how far ambient occlusion should be considered. Instead of calculating "total visibility
+        // in a hemisphere", it's more along the lines of "what's the scale of what we're rendering,
+        // and how intense should dark corners be?".
+        member inline private this.GetVariableAmbientPercent(point : Vector3, normal : Vector3, maxOccDist : float) = 
+            let normEps = point + normal.ScaledBy(EPSILON)
+            let maxOccDistRecip = 1.0 / maxOccDist
             let mutable percent = 0.0
             for n in 1 .. ambientSamples do
                 let hemisphereDir = Vector3.RandomDirectionInHemisphere(normal)
-                let hemisphereRay = Ray(normEps, hemisphereDir, defaultRayDepth)
+                let hemisphereRay = Ray(normEps, hemisphereDir, Ray.DefaultDepth())
                 let currentTry = this.NearestHit(hemisphereRay)
                 let occPercent = currentTry.T * maxOccDistRecip
                 percent <- percent + (if (currentTry.T > maxOccDist) then 1.0 else occPercent)
@@ -117,9 +129,9 @@ module Worlds =
                 let ambientPercent = this.GetAmbientPercent(point, normal)
                 ambientColor.ScaledBy(material.Ambient() * ambientPercent)
             let diffuseComponent (material : Material, point : Vector3, normal : Vector3, view : Vector3) =
-                let mutable total = Vector3.Zero()
-                let lightSamplesRecip = 1.0 / float(lightSamples)
                 let normEps = point + normal.ScaledBy(EPSILON)
+                let lightSamplesRecip = 1.0 / float(lightSamples)
+                let mutable total = Vector3.Zero()
                 for light in lights do
                     let mutable totalDiffuse = Vector3.Zero()
                     let mutable totalHighlight = Vector3.Zero()
@@ -146,7 +158,7 @@ module Worlds =
                     total <- total + (totalDiffuse + totalHighlight).ScaledBy(lightContribution)
                 total
             let reflectedComponent (material : Material, point : Vector3, normal : Vector3, view : Vector3, depth : int) =
-                if (depth > Ray.MaxDepth()) then
+                if (depth >= Ray.MaxDepth()) then
                     Vector3.Zero()
                 else
                     let normEps = point + normal.ScaledBy(EPSILON)
