@@ -5,7 +5,7 @@ This particular ray tracer was a success, and currently has neat features like s
 
 One more thing to note is that I seem to have circular dependencies in nearly all of my ray tracers in the past, but this is the first one to have zero of them. This is in part because the Visual F# project enforces sorting files from top to bottom according to their compilation order, and it seems no forward declarations are allowed, unlike other languages. Because of this restriction, I changed my ray tracer design a bit, and I think it was for the better, though now the World type has much more of the shading code that was originally in the Material type.
 
-### About F#
+### About F# #
 
 F# is a functional language derived from OCaml that also allows for some imperative and object-oriented style. I really like that values are immutable by default in F#; it's a nice break from having to write `const` all the time in C++. Other interesting traits of the language, like only allowing a type to be nullable if it should be nullable, are much appreciated, and they frequently lead to code being easier to prove correct.
 
