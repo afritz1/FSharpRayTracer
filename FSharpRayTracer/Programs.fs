@@ -1,4 +1,4 @@
-namespace FSharpRayTracer
+﻿namespace FSharpRayTracer
 
 module Programs =
     open System
@@ -22,10 +22,6 @@ module Programs =
 
         let world = World(shapeCount, lightCount, lightSamples, ambientSamples)
 
-        // Axes normalized for random point calculation on aperture.
-        let dofRight = camera.Right.Normalized()
-        let dofUp = camera.Up.Normalized()
-
         let widthRecip = 1.0 / float(width)
         let heightRecip = 1.0 / float(height)
         let superSamplesRecip = 1.0 / float(superSamples)
@@ -46,15 +42,22 @@ module Programs =
                     for i in 0 .. (superSamples - 1) do
                         let ii = float(i) * superSamplesRecip
                         let xx = (float(x) + ii) * widthRecip
-                        let focalPoint = camera.Eye + camera.GenerateDirection(xx, yy).ScaledBy(focalDistance)
+
+                        let direction = camera.GenerateDirection(xx, yy)
+                        let focalPoint = camera.Eye + direction.ScaledBy(focalDistance)
+
+                        // Depth-of-field frame for random point calculation on aperture.
+                        let dofRight = direction.Cross(Vector3.UnitY()).Normalized()
+                        let dofUp = dofRight.Cross(direction).Normalized()
+
                         for n in 1 .. dofSamples do
                             let dofRightComp = dofRight.ScaledBy((2.0 * random.Value.NextDouble()) - 1.0)
                             let dofUpComp = dofUp.ScaledBy((2.0 * random.Value.NextDouble()) - 1.0)
                             let apertureMultiplier = apertureRadius * random.Value.NextDouble()
                             let apertureOffset = (dofRightComp + dofUpComp).Normalized().ScaledBy(apertureMultiplier)
                             let apertureEye = camera.Eye + apertureOffset
-                            let direction = (focalPoint - apertureEye).Normalized()
-                            let ray = Ray(apertureEye, direction, Ray.DefaultDepth())
+                            let dofDirection = (focalPoint - apertureEye).Normalized()
+                            let ray = Ray(apertureEye, dofDirection, Ray.DefaultDepth())
                             color <- color + world.TraceRay(ray)
                 let finalColor = color.ScaledBy(superSamplesSquaredRecip * dofSamplesRecip).Clamped()
                 lock obj (fun () -> image.SetPixel(x, y, finalColor.ToColor())))
