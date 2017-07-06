@@ -35,6 +35,18 @@ module Vectors =
         static member inline ( - ) (v1 : Vector3, v2 : Vector3) = 
             Vector3(v1.X - v2.X, v1.Y - v2.Y, v1.Z - v2.Z)
 
+        static member inline ( * ) (v : Vector3, m : float) =
+            Vector3(v.X * m, v.Y * m, v.Z * m)
+
+        static member inline ( * ) (v1 : Vector3, v2 : Vector3) =
+            Vector3(v1.X * v2.X, v1.Y * v2.Y, v1.Z * v2.Z)
+
+        static member inline ( / ) (v : Vector3, m : float) =
+            Vector3(v.X / m, v.Y / m, v.Z / m)
+
+        static member inline ( / ) (v1 : Vector3, v2 : Vector3) =
+            Vector3(v1.X / v2.X, v1.Y / v2.Y, v1.Z / v2.Z)
+
         override this.ToString () = 
             let x = this.X
             let y = this.Y
@@ -66,29 +78,24 @@ module Vectors =
             let lenRecip = 1.0 / this.Length()
             Vector3(this.X * lenRecip, this.Y * lenRecip, this.Z * lenRecip)
 
+        // F# doesn't have infix operators :(
         member inline this.Negated () = 
             Vector3(-this.X, -this.Y, -this.Z)
-
-        member inline this.ScaledBy (m : float) = 
-            Vector3(this.X * m, this.Y * m, this.Z * m)
-
-        member inline this.ScaledBy (v : Vector3) = 
-            Vector3(this.X * v.X, this.Y * v.Y, this.Z * v.Z)
 
         member inline this.Reflected (normal : Vector3) =
             let vnDot = this.Dot(normal)
             let vnSign = (if (vnDot > 0.0) then 1.0 else (if (vnDot < 0.0) then -1.0 else 0.0))
-            normal.ScaledBy(vnSign * (2.0 * vnDot)) - this
+            (normal * (vnSign * (2.0 * vnDot))) - this
 
         member inline this.Lerp (v : Vector3, percent : float) =
-            this.ScaledBy(1.0 - percent) + v.ScaledBy(percent)
+            (this * (1.0 - percent)) + (v * percent)
 
         member inline this.Slerp (v : Vector3, percent : float) =
             let theta = Math.Acos(this.Dot(v) / (this.Length() * v.Length()))
             let sinTheta = Math.Sin(theta)
             let percentTheta = percent * theta
-            this.ScaledBy(Math.Sin(theta - percentTheta) / sinTheta) +
-                v.ScaledBy(Math.Sin(percentTheta) / sinTheta)
+            (this * (Math.Sin(theta - percentTheta) / sinTheta)) +
+                (v * (Math.Sin(percentTheta) / sinTheta))
 
         member inline this.Clamped () = 
             let low = 0.0
@@ -118,7 +125,7 @@ module Vectors =
             let randY = (2.0 * Vector3.GetRand()) - 1.0
             let randZ = (2.0 * Vector3.GetRand()) - 1.0
             let randPoint = Vector3(randX, randY, randZ)
-            randPoint.Normalized().ScaledBy(radius * Vector3.GetRand())
+            randPoint.Normalized() * (radius * Vector3.GetRand())
 
         static member RandomPointInCuboid (width : float, height : float, depth : float) =
             let randX = Vector3.GetRand() - 0.50

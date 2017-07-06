@@ -15,7 +15,7 @@ module Shapes =
         member this.Max = max
         member this.Extent = extent
 
-        member this.Centroid () = min + extent.ScaledBy(0.5)
+        member this.Centroid () = min + (extent * 0.5)
 
         member this.LongestAxis () =
             if (extent.X > extent.Y) && (extent.X > extent.Z) then 
@@ -115,7 +115,7 @@ module Shapes =
                     elif (b2 > EPSILON) then b2 
                     else Intersection.TMax()
                 let point = ray.PointAt(t)
-                let normal = (point - this.Centroid()).ScaledBy(radiusRecip)
+                let normal = (point - this.Centroid()) * radiusRecip
                 Intersection(t, Some(point), Some(normal), Some(material))
 
     type Cuboid (point : Vector3, width : float, height : float, depth : float, material : Material) = 

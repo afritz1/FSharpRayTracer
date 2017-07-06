@@ -38,24 +38,6 @@
     <DocumentationFile>bin\Release\FSharpRayTracer.XML</DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Drawing" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Vectors.fs" />
-    <Compile Include="Rays.fs" />
-    <Compile Include="Cameras.fs" />
-    <Compile Include="Materials.fs" />
-    <Compile Include="Intersections.fs" />
-    <Compile Include="Shapes.fs" />
-    <Compile Include="Lights.fs" />
-    <Compile Include="Worlds.fs" />
-    <Compile Include="Programs.fs" />
-  </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
   </PropertyGroup>
@@ -95,6 +77,25 @@
     </Otherwise>
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
+  <ItemGroup>
+    <Compile Include="Vectors.fs" />
+    <Compile Include="PostProcessing.fs" />
+    <Compile Include="Rays.fs" />
+    <Compile Include="Cameras.fs" />
+    <Compile Include="Materials.fs" />
+    <Compile Include="Intersections.fs" />
+    <Compile Include="Shapes.fs" />
+    <Compile Include="Lights.fs" />
+    <Compile Include="Worlds.fs" />
+    <Compile Include="Programs.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Drawing" />
+  </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

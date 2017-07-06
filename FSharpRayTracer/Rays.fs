@@ -12,4 +12,4 @@ module Rays =
         static member inline MaxDepth () = 4
 
         member this.PointAt (distance : float) = 
-            point + direction.ScaledBy(distance)
+            point + (direction * distance)

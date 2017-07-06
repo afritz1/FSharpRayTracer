@@ -92,13 +92,13 @@ module Worlds =
 
         member inline private this.BackgroundColor(ray : Ray) =
             let horizonColor = Vector3(0.60, 0.80, 1.0)
-            let zenithColor = horizonColor.ScaledBy(0.70)
+            let zenithColor = horizonColor * 0.70
             let elevation = ray.Direction.Y
             let percent = if (elevation < 0.0) then 0.0 else elevation
-            horizonColor.ScaledBy(1.0 - percent) + zenithColor.ScaledBy(percent)
+            (horizonColor * (1.0 - percent)) + (zenithColor * percent)
 
         member inline private this.GetAmbientPercent(point : Vector3, normal : Vector3) =
-            let normEps = point + normal.ScaledBy(EPSILON)
+            let normEps = point + (normal * EPSILON)
             let mutable visibleSamples = 0
             for n in 1 .. ambientSamples do
                 let hemisphereDir = Vector3.RandomDirectionInHemisphere(normal)
@@ -112,7 +112,7 @@ module Worlds =
         // in a hemisphere", it's more along the lines of "what's the scale of what we're rendering,
         // and how intense should dark corners be?".
         member inline private this.GetVariableAmbientPercent(point : Vector3, normal : Vector3, maxOccDist : float) = 
-            let normEps = point + normal.ScaledBy(EPSILON)
+            let normEps = point + (normal * EPSILON)
             let maxOccDistRecip = 1.0 / maxOccDist
             let mutable percent = 0.0
             for n in 1 .. ambientSamples do
@@ -125,11 +125,11 @@ module Worlds =
 
         member inline private this.PhongAt(intersection : Intersection, ray : Ray) =
             let ambientComponent (material : Material, point : Vector3, normal : Vector3) =
-                let ambientColor = material.Diffuse().ScaledBy(this.BackgroundColor(ray))
+                let ambientColor = material.Diffuse() * this.BackgroundColor(ray)
                 let ambientPercent = this.GetAmbientPercent(point, normal)
-                ambientColor.ScaledBy(material.Ambient() * ambientPercent)
+                ambientColor * (material.Ambient() * ambientPercent)
             let diffuseComponent (material : Material, point : Vector3, normal : Vector3, view : Vector3) =
-                let normEps = point + normal.ScaledBy(EPSILON)
+                let normEps = point + (normal * EPSILON)
                 let lightSamplesRecip = 1.0 / float(lightSamples)
                 let mutable total = Vector3.Zero()
                 for light in lights do
@@ -148,24 +148,24 @@ module Worlds =
                             let lnReflectVDot = lnReflect.Dot(view)
                             let lightColor = lightTry.Material.Value.Diffuse()
                             let shinyAmount = Math.Pow(Math.Max(0.0, lnReflectVDot), material.Shininess())
-                            let highlight = lightColor.ScaledBy(material.Specularity() * shinyAmount)
-                            let diffuse = material.Diffuse().ScaledBy(lightColor).ScaledBy(Math.Max(0.0, lnDot))
+                            let highlight = lightColor * (material.Specularity() * shinyAmount)
+                            let diffuse = (material.Diffuse() * lightColor) * (Math.Max(0.0, lnDot))
                             totalDiffuse <- totalDiffuse + diffuse
                             totalHighlight <- totalHighlight + (if (lnDot >= 0.0) then highlight else Vector3.Zero())
                     let lightContribution = float(visibleSamples) * lightSamplesRecip
-                    totalDiffuse <- totalDiffuse.ScaledBy(lightSamplesRecip)
-                    totalHighlight <- totalHighlight.ScaledBy(lightSamplesRecip)
-                    total <- total + (totalDiffuse + totalHighlight).ScaledBy(lightContribution)
+                    totalDiffuse <- totalDiffuse * lightSamplesRecip
+                    totalHighlight <- totalHighlight * lightSamplesRecip
+                    total <- total + (totalDiffuse + totalHighlight) * lightContribution
                 total
             let reflectedComponent (material : Material, point : Vector3, normal : Vector3, view : Vector3, depth : int) =
                 if (depth >= Ray.MaxDepth()) then
                     Vector3.Zero()
                 else
-                    let normEps = point + normal.ScaledBy(EPSILON)
+                    let normEps = point + (normal * EPSILON)
                     let reflectedDirection = view.Reflected(normal).Normalized()
                     let reflectedRay = Ray(normEps, reflectedDirection, depth + 1)
                     let reflectedColor : Vector3 = this.TraceRay(reflectedRay)
-                    reflectedColor.ScaledBy(material.Specularity())
+                    reflectedColor * material.Specularity()
 
             let point = intersection.Point.Value
             let normal = intersection.Normal.Value
@@ -173,7 +173,7 @@ module Worlds =
             let view = ray.Direction.Negated()
             let vnDot = view.Dot(normal)
             let vnSign = (if (vnDot > 0.0) then 1.0 else (if (vnDot < 0.0) then -1.0 else 0.0))
-            let localNormal = normal.ScaledBy(vnSign)
+            let localNormal = normal * vnSign
             let ambient = ambientComponent(material, point, localNormal)
             let diffuse = diffuseComponent(material, point, localNormal, view)
             let reflection = reflectedComponent(material, point, localNormal, view, ray.Depth)
